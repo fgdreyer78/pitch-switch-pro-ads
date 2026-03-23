@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { margin: 0; padding: 0; background: #111; overflow: hidden; font-family: 'Segoe UI', Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        a { text-decoration: none; color: white; display: block; width: 100%; height: 100%; text-align: center; }
+        .ad-container { width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: linear-gradient(45deg, #1a1a1a, #333); color: #ff5722; font-weight: bold; font-size: 13px; border: 1px solid rgba(255,87,34,0.3); box-sizing: border-box;}
+        .ad-container:hover { background: linear-gradient(45deg, #ff5722, #e64a19); color: white; }
+        .ad-container span { font-size: 10px; opacity: 0.8; margin-top: 3px; color: #ccc; }
+        .ad-container:hover span { color: white; }
+    </style>
+</head>
+<body>
+    <a id="ad-link" href="#" target="_blank">
+        <div class="ad-container" id="ad-content">
+            Loading...
+        </div>
+    </a>
+
+    <script>
+        // 1. O SENSOR DE IDIOMA
+        const isBR = navigator.language.toLowerCase().includes('pt');
+
+        // 2. SEUS LINKS DE AFILIADO (Substitua pelos seus links reais!)
+        const linkBrasil = "https://sua-hotmart-ou-amazon.com.br";
+        const textoBrasil = "Aprenda a tocar de ouvido! 🎸";
+        const subTextoBrasil = "Clique e conheça o método";
+
+        const linkGringo = "https://seu-link-de-afiliado-gringo.com";
+        const textoGringo = "Master your Guitar Skills! 🎸";
+        const subTextoGringo = "Click here to learn more";
+
+        // 3. A MÁGICA DA SUBSTITUIÇÃO
+        const adLink = document.getElementById('ad-link');
+        const adContent = document.getElementById('ad-content');
+
+        if (isBR) {
+            adLink.href = linkBrasil;
+            adContent.innerHTML = textoBrasil + "<br><span>" + subTextoBrasil + "</span>";
+        } else {
+            adLink.href = linkGringo;
+            adContent.innerHTML = textoGringo + "<br><span>" + subTextoGringo + "</span>";
+        }
+    </script>
+</body>
+</html>
