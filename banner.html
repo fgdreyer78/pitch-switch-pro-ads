@@ -20,17 +20,18 @@
     </a>
 
     <script>
-        // Esta linha pega o idioma que a extensão enviou
         const urlParams = new URLSearchParams(window.location.search);
         const forceLang = urlParams.get('lang');
-    
-        // Se a extensão mandou idioma, usa ele. Se não, olha o navegador.
+        
+        // Prioriza o que a extensão manda, se não tiver, olha o navegador
         const isBR = forceLang ? (forceLang === 'pt') : navigator.language.toLowerCase().includes('pt');
 
+        // Configurações Brasil (Amazon)
         const linkBrasil = "https://amzn.to/4d7klzO";
         const textoBrasil = "Ligue a guitarra no celular! 🎸";
         const subTextoBrasil = "Adaptador de áudio portátil em oferta na Amazon";
 
+        // Configurações Gringo (ClickBank)
         const linkGringo = "https://9b0d7dr4jv0t7temm9vkf2s8cz.hop.clickbank.net";
         const textoGringo = "The Incredible New Way To Learn Piano 🎹";
         const subTextoGringo = "Click here to discover how";
