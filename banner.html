@@ -3,49 +3,282 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pitch Shift Pro - Banner</title>
     <style>
-        body { margin: 0; padding: 0; background: #111; overflow: hidden; font-family: 'Segoe UI', Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        a { text-decoration: none; color: white; display: block; width: 100%; height: 100%; text-align: center; }
-        .ad-container { width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: linear-gradient(45deg, #1a1a1a, #333); color: #ff5722; font-weight: bold; font-size: 13px; border: 1px solid rgba(255,87,34,0.3); box-sizing: border-box;}
-        .ad-container:hover { background: linear-gradient(45deg, #ff5722, #e64a19); color: white; }
-        .ad-container span { font-size: 10px; opacity: 0.8; margin-top: 3px; color: #ccc; }
-        .ad-container:hover span { color: white; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #111;
+            overflow: hidden;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        
+        a {
+            text-decoration: none;
+            color: white;
+            display: block;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+        }
+        
+        .ad-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(145deg, #ff5722, #e64a19);
+            color: white;
+            font-weight: bold;
+            font-size: 13px;
+            border: 1px solid rgba(255,87,34,0.5);
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+            opacity: 1;
+            cursor: pointer;
+        }
+        
+        .ad-container:hover {
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.4);
+            transform: scale(1.02);
+        }
+        
+        .ad-container .titulo {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 4px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            transition: color 0.3s ease;
+        }
+        
+        .ad-container .sub {
+            font-size: 10px;
+            opacity: 0.9;
+            color: #fff;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            transition: color 0.3s ease;
+        }
+        
+        .loading {
+            color: #ccc;
+            font-size: 12px;
+        }
+        
+        .error {
+            color: #ff6b6b;
+            font-size: 11px;
+        }
+        
+        /* Hover effect classes */
+        .hover-effect .titulo,
+        .hover-effect .sub {
+            color: var(--hover-text-color) !important;
+        }
     </style>
 </head>
 <body>
     <a id="ad-link" href="#" target="_blank">
         <div class="ad-container" id="ad-content">
-            Loading...
+            <span class="loading">Carregando...</span>
         </div>
     </a>
 
-    <script>
+    <!-- Firebase App (the core Firebase SDK) -->
+    <script type="module">
+        // Import the functions you need from the SDKs
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, query, where, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAZbqKbLky0QvJFuZTDhUPQo3Hj8YF34WQ",
+            authDomain: "ban-man-psp.firebaseapp.com",
+            projectId: "ban-man-psp",
+            storageBucket: "ban-man-psp.firebasestorage.app",
+            messagingSenderId: "82049992141",
+            appId: "1:82049992141:web:be7ef944130808453b3084",
+            measurementId: "G-J5CVW3EVPM"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Get language from URL parameter
         const urlParams = new URLSearchParams(window.location.search);
-        const forceLang = urlParams.get('lang');
-        
-        // Prioriza o que a extensão manda, se não tiver, olha o navegador
-        const isBR = forceLang ? (forceLang === 'pt') : navigator.language.toLowerCase().includes('pt');
+        const lang = urlParams.get('lang') || 'pt';
 
-        // Configurações Brasil (Amazon)
-        const linkBrasil = "https://amzn.to/4d7klzO";
-        const textoBrasil = "Ligue a guitarra no celular! 🎸";
-        const subTextoBrasil = "Adaptador de áudio portátil em oferta na Amazon";
-
-        // Configurações Gringo (ClickBank)
-        const linkGringo = "https://9b0d7dr4jv0t7temm9vkf2s8cz.hop.clickbank.net";
-        const textoGringo = "The Incredible New Way To Learn Piano 🎹";
-        const subTextoGringo = "Click here to discover how";
-
+        // DOM elements
         const adLink = document.getElementById('ad-link');
         const adContent = document.getElementById('ad-content');
 
-        if (isBR) {
-            adLink.href = linkBrasil;
-            adContent.innerHTML = textoBrasil + "<br><span>" + subTextoBrasil + "</span>";
-        } else {
-            adLink.href = linkGringo;
-            adContent.innerHTML = textoGringo + "<br><span>" + subTextoGringo + "</span>";
+        // Banners array and current index
+        let banners = [];
+        let currentIndex = 0;
+        let rotationTimeout = null;
+
+        // Function to parse hex color
+        function parseColor(hexColor) {
+            if (!hexColor) return '#ff5722';
+            return hexColor.startsWith('#') ? hexColor : '#' + hexColor;
         }
+
+        // Function to update banner display
+        function updateBanner() {
+            if (banners.length === 0) {
+                adContent.innerHTML = '<span class="loading">Nenhum banner disponível</span>';
+                adLink.href = '#';
+                return;
+            }
+
+            const banner = banners[currentIndex];
+            
+            // Update link
+            adLink.href = banner.urlLink || '#';
+            
+            // Update styles with gradient
+            const bgColor1 = parseColor(banner.corFundo1);
+            const bgColor2 = parseColor(banner.corFundo2);
+            const titleColor = parseColor(banner.corTitulo);
+            const subColor = parseColor(banner.corSub);
+            
+            // Apply gradient background
+            adContent.style.background = `linear-gradient(145deg, ${bgColor1}, ${bgColor2})`;
+            adContent.style.borderColor = `${bgColor1}80`;
+            
+            // Store hover colors for later use
+            adContent.style.setProperty('--hover-bg-1', parseColor(banner.corHoverFundo1));
+            adContent.style.setProperty('--hover-bg-2', parseColor(banner.corHoverFundo2));
+            adContent.style.setProperty('--hover-text-color', parseColor(banner.corHoverTexto));
+            
+            // Update content
+            let html = `<span class="titulo" style="color: ${titleColor}">${escapeHtml(banner.titulo)}</span>`;
+            if (banner.sub && banner.sub.trim()) {
+                html += `<span class="sub" style="color: ${subColor}">${escapeHtml(banner.sub)}</span>`;
+            }
+            
+            // Fade effect
+            adContent.style.opacity = '0';
+            setTimeout(() => {
+                adContent.innerHTML = html;
+                adContent.style.opacity = '1';
+                
+                // Setup hover effects
+                setupHoverEffects(banner);
+            }, 250);
+            
+            // Schedule next rotation with dynamic duration
+            scheduleNextRotation(banner.duracao || 15);
+        }
+
+        // Function to setup hover effects
+        function setupHoverEffects(banner) {
+            const hoverBg1 = parseColor(banner.corHoverFundo1);
+            const hoverBg2 = parseColor(banner.corHoverFundo2);
+            const hoverTextColor = parseColor(banner.corHoverTexto);
+            
+            adContent.onmouseenter = () => {
+                adContent.style.background = `linear-gradient(145deg, ${hoverBg1}, ${hoverBg2})`;
+                adContent.classList.add('hover-effect');
+            };
+            
+            adContent.onmouseleave = () => {
+                const bg1 = parseColor(banner.corFundo1);
+                const bg2 = parseColor(banner.corFundo2);
+                adContent.style.background = `linear-gradient(145deg, ${bg1}, ${bg2})`;
+                adContent.classList.remove('hover-effect');
+            };
+        }
+
+        // Function to schedule next rotation with dynamic duration
+        function scheduleNextRotation(durationSeconds) {
+            if (rotationTimeout) {
+                clearTimeout(rotationTimeout);
+            }
+            
+            if (banners.length > 1) {
+                rotationTimeout = setTimeout(() => {
+                    currentIndex = (currentIndex + 1) % banners.length;
+                    updateBanner();
+                }, durationSeconds * 1000); // Convert seconds to milliseconds
+            }
+        }
+
+        // Function to escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Function to filter banners by language
+        function filterBannersByLanguage(allBanners) {
+            return allBanners.filter(banner => {
+                return banner.idioma === lang || banner.idioma === 'ambos';
+            });
+        }
+
+        // Query Firestore for active banners
+        const bannersRef = collection(db, 'banners');
+        const q = query(bannersRef, where('status', '==', 'ativo'));
+
+        // Real-time listener
+        onSnapshot(q, (snapshot) => {
+            const allBanners = [];
+            
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                allBanners.push({
+                    id: doc.id,
+                    titulo: data.titulo || '',
+                    sub: data.sub || '',
+                    urlLink: data.urlLink || '#',
+                    corFundo1: data.corFundo1 || '#ff5722',
+                    corFundo2: data.corFundo2 || '#e64a19',
+                    corTitulo: data.corTitulo || '#ffffff',
+                    corSub: data.corSub || '#ffffff',
+                    corHoverFundo1: data.corHoverFundo1 || '#e64a19',
+                    corHoverFundo2: data.corHoverFundo2 || '#d84315',
+                    corHoverTexto: data.corHoverTexto || '#ffffff',
+                    duracao: data.duracao || 15,
+                    idioma: data.idioma || 'ambos',
+                    status: data.status || 'espera'
+                });
+            });
+
+            // Filter by language
+            banners = filterBannersByLanguage(allBanners);
+            
+            // Reset index if needed
+            if (currentIndex >= banners.length) {
+                currentIndex = 0;
+            }
+
+            // Update display
+            updateBanner();
+
+            console.log(`[Pitch Shift Pro Banner] Loaded ${banners.length} active banners for language: ${lang}`);
+        }, (error) => {
+            console.error('[Pitch Shift Pro Banner] Error fetching banners:', error);
+            adContent.innerHTML = '<span class="error">Erro ao carregar banner</span>';
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (rotationTimeout) {
+                clearTimeout(rotationTimeout);
+            }
+        });
     </script>
 </body>
 </html>
