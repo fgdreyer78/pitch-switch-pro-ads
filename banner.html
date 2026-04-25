@@ -93,13 +93,10 @@
         </div>
     </a>
 
-    <!-- Firebase App (the core Firebase SDK) -->
     <script type="module">
-        // Import the functions you need from the SDKs
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { getFirestore, collection, query, where, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
-        // Your web app's Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyAZbqKbLky0QvJFuZTDhUPQo3Hj8YF34WQ",
             authDomain: "ban-man-psp.firebaseapp.com",
@@ -110,30 +107,24 @@
             measurementId: "G-J5CVW3EVPM"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Get language from URL parameter
         const urlParams = new URLSearchParams(window.location.search);
         const lang = urlParams.get('lang') || 'pt';
 
-        // DOM elements
         const adLink = document.getElementById('ad-link');
         const adContent = document.getElementById('ad-content');
 
-        // Banners array and current index
         let banners = [];
         let currentIndex = 0;
         let rotationTimeout = null;
 
-        // Function to parse hex color
         function parseColor(hexColor) {
             if (!hexColor) return '#ff5722';
             return hexColor.startsWith('#') ? hexColor : '#' + hexColor;
         }
 
-        // Function to update banner display
         function updateBanner() {
             if (banners.length === 0) {
                 adContent.innerHTML = '<span class="loading">Nenhum banner disponível</span>';
@@ -143,45 +134,36 @@
 
             const banner = banners[currentIndex];
             
-            // Update link
             adLink.href = banner.urlLink || '#';
             
-            // Update styles with gradient
             const bgColor1 = parseColor(banner.corFundo1);
             const bgColor2 = parseColor(banner.corFundo2);
             const titleColor = parseColor(banner.corTitulo);
             const subColor = parseColor(banner.corSub);
             
-            // Apply gradient background
             adContent.style.background = `linear-gradient(145deg, ${bgColor1}, ${bgColor2})`;
             adContent.style.borderColor = `${bgColor1}80`;
             
-            // Store hover colors for later use
             adContent.style.setProperty('--hover-bg-1', parseColor(banner.corHoverFundo1));
             adContent.style.setProperty('--hover-bg-2', parseColor(banner.corHoverFundo2));
             adContent.style.setProperty('--hover-text-color', parseColor(banner.corHoverTexto));
             
-            // Update content
             let html = `<span class="titulo" style="color: ${titleColor}">${escapeHtml(banner.titulo)}</span>`;
             if (banner.sub && banner.sub.trim()) {
                 html += `<span class="sub" style="color: ${subColor}">${escapeHtml(banner.sub)}</span>`;
             }
             
-            // Fade effect
             adContent.style.opacity = '0';
             setTimeout(() => {
                 adContent.innerHTML = html;
                 adContent.style.opacity = '1';
                 
-                // Setup hover effects
                 setupHoverEffects(banner);
             }, 250);
             
-            // Schedule next rotation with dynamic duration
             scheduleNextRotation(banner.duracao || 15);
         }
 
-        // Function to setup hover effects
         function setupHoverEffects(banner) {
             const hoverBg1 = parseColor(banner.corHoverFundo1);
             const hoverBg2 = parseColor(banner.corHoverFundo2);
@@ -200,7 +182,6 @@
             };
         }
 
-        // Function to schedule next rotation with dynamic duration
         function scheduleNextRotation(durationSeconds) {
             if (rotationTimeout) {
                 clearTimeout(rotationTimeout);
@@ -210,29 +191,25 @@
                 rotationTimeout = setTimeout(() => {
                     currentIndex = (currentIndex + 1) % banners.length;
                     updateBanner();
-                }, durationSeconds * 1000); // Convert seconds to milliseconds
+                }, durationSeconds * 1000); 
             }
         }
 
-        // Function to escape HTML
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
 
-        // Function to filter banners by language
         function filterBannersByLanguage(allBanners) {
             return allBanners.filter(banner => {
                 return banner.idioma === lang || banner.idioma === 'ambos';
             });
         }
 
-        // Query Firestore for active banners
         const bannersRef = collection(db, 'banners');
         const q = query(bannersRef, where('status', '==', 'ativo'));
 
-        // Real-time listener
         onSnapshot(q, (snapshot) => {
             const allBanners = [];
             
@@ -256,15 +233,12 @@
                 });
             });
 
-            // Filter by language
             banners = filterBannersByLanguage(allBanners);
             
-            // Reset index if needed
             if (currentIndex >= banners.length) {
                 currentIndex = 0;
             }
 
-            // Update display
             updateBanner();
 
             console.log(`[Pitch Shift Pro Banner] Loaded ${banners.length} active banners for language: ${lang}`);
@@ -273,12 +247,24 @@
             adContent.innerHTML = '<span class="error">Erro ao carregar banner</span>';
         });
 
-        // Cleanup on page unload
         window.addEventListener('beforeunload', () => {
             if (rotationTimeout) {
                 clearTimeout(rotationTimeout);
             }
         });
+    </script>
+
+    <script>
+        window.addEventListener('wheel', function(e) {
+            // Envia a direção e a força do scroll para a aba do Chrome (content.js)
+            window.parent.postMessage({ 
+                tipo: 'PASC_SCROLL_BANNER', 
+                deltaY: e.deltaY 
+            }, '*');
+            
+            // Impede que o banner role a página de fundo
+            e.preventDefault();
+        }, { passive: false });
     </script>
 </body>
 </html>
