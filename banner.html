@@ -110,8 +110,10 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        // --- CAPTURA DE VARIÁVEIS DA EXTENSÃO ---
         const urlParams = new URLSearchParams(window.location.search);
         const lang = urlParams.get('lang') || 'pt';
+        const geo = urlParams.get('geo') || 'INT'; // Adicionado o parâmetro geográfico
 
         const adLink = document.getElementById('ad-link');
         const adContent = document.getElementById('ad-content');
@@ -201,9 +203,12 @@
             return div.innerHTML;
         }
 
-        function filterBannersByLanguage(allBanners) {
+        // --- LÓGICA ATUALIZADA DE FILTRAGEM (IDIOMA E GEOGRAFIA) ---
+        function filterBanners(allBanners) {
             return allBanners.filter(banner => {
-                return banner.idioma === lang || banner.idioma === 'ambos';
+                const matchLang = (banner.idioma === lang || banner.idioma === 'ambos');
+                const matchGeo = (banner.territorio === geo || banner.territorio === 'ambos');
+                return matchLang && matchGeo;
             });
         }
 
@@ -229,11 +234,12 @@
                     corHoverTexto: data.corHoverTexto || '#ffffff',
                     duracao: data.duracao || 15,
                     idioma: data.idioma || 'ambos',
+                    territorio: data.territorio || 'ambos', // NOVO: Propriedade de território com fallback
                     status: data.status || 'espera'
                 });
             });
 
-            banners = filterBannersByLanguage(allBanners);
+            banners = filterBanners(allBanners);
             
             if (currentIndex >= banners.length) {
                 currentIndex = 0;
@@ -241,7 +247,7 @@
 
             updateBanner();
 
-            console.log(`[Pitch Shift Pro Banner] Loaded ${banners.length} active banners for language: ${lang}`);
+            console.log(`[Pitch Shift Pro Banner] Loaded ${banners.length} active banners for lang: ${lang} | geo: ${geo}`);
         }, (error) => {
             console.error('[Pitch Shift Pro Banner] Error fetching banners:', error);
             adContent.innerHTML = '<span class="error">Erro ao carregar banner</span>';
