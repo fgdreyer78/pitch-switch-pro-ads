@@ -5,85 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pitch Shift Pro - Banner</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            background: #111;
-            overflow: hidden;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        
-        a {
-            text-decoration: none;
-            color: white;
-            display: block;
-            width: 100%;
-            height: 100%;
-            text-align: center;
-        }
-        
-        .ad-container {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background: linear-gradient(145deg, #ff5722, #e64a19);
-            color: white;
-            font-weight: bold;
-            font-size: 13px;
-            border: 1px solid rgba(255,87,34,0.5);
-            box-sizing: border-box;
-            transition: all 0.3s ease;
-            opacity: 1;
-            cursor: pointer;
-        }
-        
-        .ad-container:hover {
-            box-shadow: inset 0 0 15px rgba(0,0,0,0.4);
-            transform: scale(1.02);
-        }
-        
-        .ad-container .titulo {
-            font-size: 14px;
-            font-weight: bold;
-            margin-bottom: 4px;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-            transition: color 0.3s ease;
-        }
-        
-        .ad-container .sub {
-            font-size: 10px;
-            opacity: 0.9;
-            color: #fff;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-            transition: color 0.3s ease;
-        }
-        
-        .loading {
-            color: #ccc;
-            font-size: 12px;
-        }
-        
-        .error {
-            color: #ff6b6b;
-            font-size: 11px;
-        }
-        
-        /* Hover effect classes */
-        .hover-effect .titulo,
-        .hover-effect .sub {
-            color: var(--hover-text-color) !important;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #111; overflow: hidden; font-family: 'Segoe UI', Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        a { text-decoration: none; color: white; display: block; width: 100%; height: 100%; text-align: center; }
+        .ad-container { width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: linear-gradient(145deg, #ff5722, #e64a19); color: white; font-weight: bold; font-size: 13px; border: 1px solid rgba(255,87,34,0.5); box-sizing: border-box; transition: all 0.3s ease; opacity: 1; cursor: pointer; }
+        .ad-container:hover { box-shadow: inset 0 0 15px rgba(0,0,0,0.4); transform: scale(1.02); }
+        .ad-container .titulo { font-size: 14px; font-weight: bold; margin-bottom: 4px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); transition: color 0.3s ease; }
+        .ad-container .sub { font-size: 10px; opacity: 0.9; color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); transition: color 0.3s ease; }
+        .loading { color: #ccc; font-size: 12px; }
+        .error { color: #ff6b6b; font-size: 11px; }
+        .hover-effect .titulo, .hover-effect .sub { color: var(--hover-text-color) !important; }
     </style>
 </head>
 <body>
@@ -110,10 +41,9 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- CAPTURA DE VARIÁVEIS DA EXTENSÃO ---
+        // Captura apenas a geografia da URL (ignora idioma)
         const urlParams = new URLSearchParams(window.location.search);
-        const lang = urlParams.get('lang') || 'pt';
-        const geo = urlParams.get('geo') || 'INT'; // Adicionado o parâmetro geográfico
+        const geo = urlParams.get('geo') || 'INT'; 
 
         const adLink = document.getElementById('ad-link');
         const adContent = document.getElementById('ad-content');
@@ -135,7 +65,6 @@
             }
 
             const banner = banners[currentIndex];
-            
             adLink.href = banner.urlLink || '#';
             
             const bgColor1 = parseColor(banner.corFundo1);
@@ -159,7 +88,6 @@
             setTimeout(() => {
                 adContent.innerHTML = html;
                 adContent.style.opacity = '1';
-                
                 setupHoverEffects(banner);
             }, 250);
             
@@ -169,13 +97,10 @@
         function setupHoverEffects(banner) {
             const hoverBg1 = parseColor(banner.corHoverFundo1);
             const hoverBg2 = parseColor(banner.corHoverFundo2);
-            const hoverTextColor = parseColor(banner.corHoverTexto);
-            
             adContent.onmouseenter = () => {
                 adContent.style.background = `linear-gradient(145deg, ${hoverBg1}, ${hoverBg2})`;
                 adContent.classList.add('hover-effect');
             };
-            
             adContent.onmouseleave = () => {
                 const bg1 = parseColor(banner.corFundo1);
                 const bg2 = parseColor(banner.corFundo2);
@@ -185,10 +110,7 @@
         }
 
         function scheduleNextRotation(durationSeconds) {
-            if (rotationTimeout) {
-                clearTimeout(rotationTimeout);
-            }
-            
+            if (rotationTimeout) clearTimeout(rotationTimeout);
             if (banners.length > 1) {
                 rotationTimeout = setTimeout(() => {
                     currentIndex = (currentIndex + 1) % banners.length;
@@ -203,12 +125,11 @@
             return div.innerHTML;
         }
 
-        // --- LÓGICA ATUALIZADA DE FILTRAGEM (IDIOMA E GEOGRAFIA) ---
+        // LÓGICA DE FILTRAGEM: Olhamos apenas para o território.
         function filterBanners(allBanners) {
             return allBanners.filter(banner => {
-                const matchLang = (banner.idioma === lang || banner.idioma === 'ambos');
-                const matchGeo = (banner.territorio === geo || banner.territorio === 'ambos');
-                return matchLang && matchGeo;
+                const territorioBanner = banner.territorio || 'ambos';
+                return territorioBanner === geo || territorioBanner === 'ambos';
             });
         }
 
@@ -233,42 +154,30 @@
                     corHoverFundo2: data.corHoverFundo2 || '#d84315',
                     corHoverTexto: data.corHoverTexto || '#ffffff',
                     duracao: data.duracao || 15,
-                    idioma: data.idioma || 'ambos',
-                    territorio: data.territorio || 'ambos', // NOVO: Propriedade de território com fallback
+                    territorio: data.territorio || 'ambos', // Novo campo
                     status: data.status || 'espera'
                 });
             });
 
             banners = filterBanners(allBanners);
             
-            if (currentIndex >= banners.length) {
-                currentIndex = 0;
-            }
-
+            if (currentIndex >= banners.length) currentIndex = 0;
             updateBanner();
 
-            console.log(`[Pitch Shift Pro Banner] Loaded ${banners.length} active banners for lang: ${lang} | geo: ${geo}`);
+            console.log(`[Pitch Shift Pro Banner] Loaded ${banners.length} active banners for geo: ${geo}`);
         }, (error) => {
             console.error('[Pitch Shift Pro Banner] Error fetching banners:', error);
             adContent.innerHTML = '<span class="error">Erro ao carregar banner</span>';
         });
 
         window.addEventListener('beforeunload', () => {
-            if (rotationTimeout) {
-                clearTimeout(rotationTimeout);
-            }
+            if (rotationTimeout) clearTimeout(rotationTimeout);
         });
     </script>
 
     <script>
         window.addEventListener('wheel', function(e) {
-            // Envia a direção e a força do scroll para a aba do Chrome (content.js)
-            window.parent.postMessage({ 
-                tipo: 'PASC_SCROLL_BANNER', 
-                deltaY: e.deltaY 
-            }, '*');
-            
-            // Impede que o banner role a página de fundo
+            window.parent.postMessage({ tipo: 'PASC_SCROLL_BANNER', deltaY: e.deltaY }, '*');
             e.preventDefault();
         }, { passive: false });
     </script>
