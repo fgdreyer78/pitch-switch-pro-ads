@@ -1,0 +1,7 @@
+{
+  "licensa_check_interval_ms": 120000,
+  "glide_global_default": 100,
+  "banner_active_global": true,
+  "debug_mode": true,
+  "min_version_required": "1.0.0"
+}
